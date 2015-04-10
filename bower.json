@@ -1,8 +1,10 @@
 {
   "name": "ph-listview",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "keywords": [
-    "seed",
+    "listview",
+    "feed",
+    "reader",
     "polymer",
     "web-components"
   ],
