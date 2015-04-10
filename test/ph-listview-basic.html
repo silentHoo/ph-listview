@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="">
+<html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ph-listview</title>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>ph-listview-basic</title>
 
   <script src="../../webcomponentsjs/webcomponents.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../moment/min/moment.min.js"></script>
 
   <!-- Step 1: import the element to test -->
   <link rel="import" href="../ph-listview.html">
@@ -14,33 +14,132 @@
 </head>
 <body>
 
-  <ph-listview id="fixture"></ph-listview>
+<template is="auto-binding" id="template">
+  <ph-listview
+      id="listView"
+      feed="{{feed}}"
+      viewType="{{viewType}}"
+      handleAs="{{handleAs}}"
+      sortByDateAsc="{{sortByDateAsc}}"
+      dateFormat="{{dateFormat}}"
+      >
+  </ph-listview>
+</template>
 
-  <script>
-    var myEl = document.getElementById('fixture');
+<script>
+  suite('ph-listview', function () {
 
-    suite('<ph-listview>', function() {
+    var t = document.querySelector('#template');
+    var l;
 
-      test('defines the "author" property', function() {
-        assert.equal(myEl.author, 'Dimitri Glazkov');
+    // wait until template is bound
+    before(function (done) {
+      Polymer.mixin(t, {
+        feed: 'fixtures.rss',
+        viewType: '',
+        handleAs: 'rss',
+        sortByDateAsc: '',
+        dateFormat: ''
       });
 
-      test('says hello', function() {
-        assert.equal(myEl.sayHello(), 'ph-listview says, Hello World!');
-        var greetings = myEl.sayHello('greetings Earthlings');
-        assert.equal(greetings, 'ph-listview says, greetings Earthlings');
+      var defineListView = function () {
+        l = t.$.listView;
+
+        // wait until the response is proceeded
+        l.addEventListener('response-proceeded', function () {
+          done(); // now start the tests!
+        });
+      };
+
+      t.addEventListener('template-bound', function () {
+        defineListView();
+      });
+    });
+
+    test('viewType should be `default`', function () {
+      assert.equal(l.viewType, 'default');
+    });
+
+    test('feed should be processed as RSS', function () {
+      assert.equal(l._entries[0].title, 'title #1');
+      assert.equal(l._entries[1].title, 'title #2');
+      assert.equal(l._entries[2].title, 'title #3');
+    });
+
+    test('entries should be sort by date descending through filter', function () {
+      var sorted = l._filterSortEntries(l._entries);
+      assert.isTrue(moment(sorted[0].date).isAfter(moment(sorted[1].date)));
+      assert.isTrue(moment(sorted[1].date).isAfter(moment(sorted[2].date)));
+    });
+
+    test('entries should be sort by date ascending through filter', function (done) {
+      Polymer.mixin(t, {
+        feed: 'fixtures.rss',
+        viewType: '',
+        handleAs: 'rss',
+        sortByDateAsc: true,  // <-- changed
+        dateFormat: ''
       });
 
-      test('fires lasers', function(done) {
-        myEl.addEventListener('ph-listview-lasers-success', function(event) {
-          assert.equal(event.detail.sound, 'Pew pew pew!');
+      // wait for bindings to be done
+      flush(function () {
+        var sorted = l._filterSortEntries(l._entries);
+        assert.isTrue(moment(sorted[0].date).isBefore(moment(sorted[1].date)));
+        assert.isTrue(moment(sorted[1].date).isBefore(moment(sorted[2].date)));
+        done();
+      });
+    });
+
+    test('feed should be processed by custom feed and function', function (done) {
+      Polymer.mixin(t, {
+        feed: 'fixtures.xml',  // <-- changed
+        viewType: '',
+        handleAs: 'xml',       // <-- changed
+        sortByDateAsc: true,   // <-- changed
+        dateFormat: ''
+      });
+
+      l.setResponseParseFunc(function (response) {
+        var xmlNodeTree = response.querySelectorAll('entry'); // we only use the <entry>s
+
+        var entries = [];
+        for (var i = 0; i < xmlNodeTree.length; i++) {
+          var node = xmlNodeTree[i];
+          var media = node.querySelector('group');
+
+          entries.push({
+            title: node.querySelector('title').textContent,
+            date: node.querySelector('published').textContent,
+            link: node.querySelector('link[rel="alternate"]').getAttribute('href'),
+            category: media.querySelector('category').getAttribute('label'),
+            description: media.querySelector('description').textContent,
+            thumb: media.querySelectorAll('thumbnail')[0].getAttribute('url')
+          });
+        }
+
+        return entries;
+      });
+
+      // wait for bindings to be done
+      flush(function () {
+        l.addEventListener('response-proceeded', function () {
+          // now start the test, but first sort manually, because we have no event to check
+          var sorted = l._filterSortEntries(l._entries);
+
+          assert.equal(sorted[0].title, 'My Title #1');
+          assert.equal(sorted[0].date, '2014-10-07T13:57:37.000Z');
+          assert.equal(sorted[0].link, 'http://example.com/');
+          assert.equal(sorted[0].category, 'label1');
+          assert.equal(sorted[0].description, 'This  is a very long description 1...');
+          assert.equal(sorted[0].thumb, 'http://lorempixel.com/400/200/');
+          assert.equal(sorted.length, 3);
           done();
         });
-        myEl.fireLasers();
-      });
 
+      });
     });
-  </script>
+  });
+</script>
 
 </body>
 </html>

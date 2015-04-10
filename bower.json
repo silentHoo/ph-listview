@@ -19,6 +19,7 @@
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^2.2.3",
     "paper-radio-group": "Polymer/paper-radio-group#0.5",
-    "paper-radio-button": "Polymer/paper-radio-button#0.5"
+    "paper-radio-button": "Polymer/paper-radio-button#0.5",
+    "moment": "~2.10.2"
   }
 }
