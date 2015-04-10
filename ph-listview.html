@@ -32,7 +32,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 
     <ph-listview
       id="listView"
-      feed="http://gdata.youtube.com/feeds/api/videos/"
+      feed="http://<your-url>/to/file.xml"
       handleAs="xml"
       viewType="compact"
       sortByDateAsc="false"
@@ -44,7 +44,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 
     <ph-listview
       id="listView"
-      feed="http://gdata.youtube.com/feeds/api/videos/"
+      feed="http://<your-url>/to/file.xml"
       handleAs="xml"
       viewType="default"
       sortByDateAsc="true"
@@ -77,7 +77,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 ##### Example 3
 
     <ph-listview
-      feed="http://www.welt.de/wirtschaft/webwelt/?service=Rss"
+      feed="http://<your-url>/to/file.rss"
       handleAs="rss"
       viewType="default"
       sortByDateAsc="false"
@@ -346,7 +346,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         },
 
         _validateViewType: function(oldVal, newVal) {
-          if (newVal !== 'compact' && newVal !== 'default' && newVal !== '') {
+          if (newVal !== 'compact' && newVal !== 'default') {
             this.viewType = 'default';
             console.warn('You have not set a viewType. I assume you will use the default.');
           }
@@ -370,8 +370,9 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 
         // sort filter
         _filterSortEntries: function(entries) {
+          var list = entries.slice();
           var me = this;
-          entries.sort(function(a, b) {
+          list.sort(function(a, b) {
             var asc = me._sortAsc;
             var aC = asc ? moment(a.date) : moment(b.date);
             var bC = asc ? moment(b.date) : moment(a.date);
@@ -383,7 +384,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
             }
             return 0;
           });
-          return entries;
+          return list;
         },
 
         // date format filter
