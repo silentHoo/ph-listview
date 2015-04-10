@@ -1,4 +1,49 @@
 :host {
   display: block;
-  color: red;
+}
+
+.view-default {
+  padding: 10px;
+  border-bottom: 1px grey solid;
+  background-color: #f5f5f5;
+}
+.view-default .preview core-image {
+  width: 300px;
+  height: 200px;
+}
+.view-default .content {
+  padding-left: 10px;
+}
+.view-default .content .title {
+  font-weight: bold;
+  font-size: 24px;
+  padding-bottom: 5px;
+}
+.view-default .content .subtitle {
+  padding-bottom: 20px;
+}
+.view-default .content .subtitle .date {
+  color: #7da0bb;
+  font-size: 14px;
+}
+.view-default .content .subtitle .category {
+  font-style: italic;
+  font-size: 14px;
+}
+.view-default .content .description {
+  background-color: #ededed;
+  padding: 5px;
+}
+.view-default .content .link {
+  margin-top: 10px;
+  text-align: right;
+}
+
+a, a:active, a:visited {
+  color: #7da0bb;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #4a617c;
 }
