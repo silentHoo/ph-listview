@@ -1,7 +1,8 @@
+
 <link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../core-ajax/core-ajax.html">
-<link rel="import" href="../core-list/core-list.html">
-<link rel="import" href="../core-image/core-image.html">
+<link rel="import" href="../iron-ajax/iron-ajax.html">
+<link rel="import" href="../iron-list/iron-list.html">
+<link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="helpers.html">
 
 <!--
@@ -25,7 +26,7 @@ own parse function, you must return an array which aligns with the following for
     }]
     ...
 
-Please note: The date must be parseable by the `Moment.js` library. If you use a custom format you can refer to the 
+Please note: The date must be parseable by the `Moment.js` library. If you use a custom format you can refer to the
 [String + Format section](http://momentjs.com/docs/#/parsing/string-format/) for more information of valid string formats.
 
 ##### Example 1
@@ -89,95 +90,140 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 @status alpha
 @homepage http://silentHoo.github.io/ph-listview
 -->
-<polymer-element name="ph-listview" constructor="PhListView">
+  <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<dom-module id="ph-listview">
+  <style>
+    /* TODO(polyup): For speed, consider reworking these styles with .classes
+                     and #ids rather than [attributes].
+    */
+    [fit] {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+    [layout] {
+      @apply(--layout);
+    }
+    [layout][horizontal] {
+      @apply(--layout-horizontal);
+    }
+    [layout][vertical] {
+      @apply(--layout-vertical);
+    }
+    [layout][start] {
+      @apply(--layout-start);
+    }
+  </style>
+  <link rel="import" type="css" href="ph-listview.css">
   <template>
-    <link rel="stylesheet" href="ph-listview.css">
     <script type="text/javascript" src="../moment/min/moment.min.js"></script>
-    
+
     <!-- non-visible 3rd party component -->
-    <core-ajax auto url="{{ feed }}" on-core-complete="{{ _requestCompleted }}"></core-ajax>
+    <iron-ajax auto="" url="{{ feed }}" on-core-complete=" _requestCompleted "></iron-ajax>
 
     <!-- template binding to 'default' -->
-    <template if="{{ (viewType == 'default') && _entries.length > 0 }}" ref="template-default"></template>
+    <template is="dom-if" if="{{_computeIf(_entries, viewType)}}" ref="template-default"></template>
 
     <!-- template binding to 'compact' -->
-    <template if="{{ viewType == 'compact' && _entries.length > 0 }}" ref="template-compact"></template>
+    <template is="dom-if" if="{{_computeIf(_entries, viewType)}}" ref="{{_computeIf2(_entries, viewType)}}"></template>
 
     <!-- template definition for 'default' -->
     <template id="template-default">
       <!-- make sure you are 'fit' the given space! -->
-      <core-list data="{{ _entries | _filterSortEntries }}" fit>
+      <iron-list data="{{_filterSortEntries ( _entries)}}" fit="">
         <template>
-          <div class="view-default" horizontal layout>
-            <div class="preview" vertical layout start one>
-              <core-image src="{{ model.thumb }}" sizing="contain"></core-image>
+          <div class="view-default" horizontal="" layout="">
+            <div class="preview" vertical="" layout="" start="" one="">
+              <iron-image src="{{ model.thumb }}" sizing="contain"></iron-image>
             </div>
-            <div class="content" flex>
-              <div vertical layout>
+            <div class="content" flex="">
+              <div vertical="" layout="">
                 <div class="title">{{ model.title }}</div>
                 <div class="subtitle">
-                  <span class="date">{{ model.date | _filterDateView }}</span>,
+                  <span class="date">{{_filterDateView ( model.date)}}</span>,
                   <span class="category">{{ model.category }}</span>
                 </div>
                 <div class="description">{{ model.description }}</div>
-                <div class="link"><a href="{{ model.link }}">Weiterlesen...</a></div>
+                <div class="link"><a href$="{{ model.link }}">Weiterlesen...</a></div>
               </div>
             </div>
           </div>
         </template>
-      </core-list>
+      </iron-list>
     </template>
 
     <!-- template definition for 'compact' -->
     <template id="template-compact">
       <!-- make sure you are 'fit' the given space! -->
-      <core-list data="{{ _entries | _filterSortEntries }}" fit>
+      <iron-list data="{{_filterSortEntries ( _entries)}}" fit="">
         <template>
-          <div class="view-default" horizontal layout>
-            <div class="content" flex>
-              <div vertical layout>
-                <div class="title"><a href="{{ model.link }}">{{ model.title }}</a></div>
+          <div class="view-default" horizontal="" layout="">
+            <div class="content" flex="">
+              <div vertical="" layout="">
+                <div class="title"><a href$="{{ model.link }}">{{ model.title }}</a></div>
                 <div class="subtitle">
-                  <span class="date">{{ model.date | _filterDateView }}</span>,
+                  <span class="date">{{_filterDateView ( model.date)}}</span>,
                   <span class="category">{{ model.category }}</span>
                 </div>
               </div>
             </div>
           </div>
         </template>
-      </core-list>
+      </iron-list>
     </template>
 
   </template>
-
   <script>
-    (function() {
+    (function () {
       // private static in IIFE
-      var _handleResponseStatic = function(handleAs, detail) {
+      var _handleResponseStatic = function (handleAs, detail) {
         var response;
         switch (handleAs) {
-          case 'xml':
-          case 'rss':
-            response = detail.xhr.responseXML;
-            break;
-          case 'json':
-            response = detail.xhr.response;
-            break;
+        case 'xml':
+        case 'rss':
+          response = detail.xhr.responseXML;
+          break;
+        case 'json':
+          response = detail.xhr.response;
+          break;
         }
         return response;
       };
-
-      Polymer(Polymer.mixin({ // Mixins @see https://www.polymer-project.org/0.5/docs/polymer/helpers.html#using-mixins
-
-        /**
-         * Fired when the request is done and the response data is processed.
-         *
-         * @event response-proceeded
-         */
-
-        // published properties of the custom element
-        // @see https://www.polymer-project.org/0.5/docs/polymer/polymer.html#published-properties
-        publish: {
+      Polymer({
+        is: 'ph-listview',
+        behaviors: [Polymer.MyHelper],
+        properties: {
+          _sortAsc: { observer: '_sortAscChanged' },
+          /**
+           * The `dateFormat` attribute is used to set your own dateFormat which will be parsed by `Moment.js`. See
+           * http://momentjs.com/docs/#/parsing/string-format/ for all formats.
+           *
+           * @attribute dateFormat
+           * @type string
+           * @default ''
+           */
+          dateFormat: {
+            type: String,
+            value: '',
+            notify: true
+          },
+          //
+          // *** event delegates ***
+          //
+          // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#imperative-event-mapping
+          //
+          eventDelegates: {
+            type: Object,
+            value: function () {
+              return {
+                'response-proceeded': function (event, detail, sender) {
+                  console.info('The host element (ph-listview) sent a `response-proceeded` event to the outer world with ' + 'msg: "' + detail.msg + '"');
+                }
+              };
+            }
+          },
           /**
            * The `feed` attribute sets the json or xml format list which is requested via XMLHTTPRequest
            * from the remote server.
@@ -186,8 +232,12 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * @type string
            * @default ''
            */
-          feed: '',
-
+          feed: {
+            type: String,
+            value: '',
+            notify: true,
+            observer: '_validateFeed'
+          },
           /**
            * The `handleAs` attribute sets the format for the given feed. Valid inputs are **xml**, **json** and
            * **xml**.
@@ -196,8 +246,27 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * @type string
            * @default 'rss'
            */
-          handleAs: 'xml',
-
+          handleAs: {
+            type: String,
+            value: 'xml',
+            notify: true,
+            observer: '_validateHandleAs'
+          },
+          // will be reflected to the custom elements attribute value if the viewType's value changes
+          /**
+           * The `sortByDateAsc` attribute specifies whether the entries should be sorted ascending or descending
+           * by their given date. **true** means the oldest entry is on top of the list, **false** vice versa.
+           *
+           * @attribute sortByDateAsc
+           * @type boolean
+           * @default false
+           */
+          sortByDateAsc: {
+            type: Boolean,
+            value: false,
+            notify: true,
+            observer: '_validateSortByDateAsc'
+          },
           /**
            * The `viewType` attribute sets the used view which is represented by the component. You can choose between
            * **''** (empty string, which is the same as **'default'**) or **'compact'**. **'default'** shows you a
@@ -209,31 +278,13 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * @default 'default'
            */
           viewType: {
+            type: String,
             value: 'default',
-            reflect: true // will be reflected to the custom elements attribute value if the viewType's value changes
-          },
-
-          /**
-           * The `sortByDateAsc` attribute specifies whether the entries should be sorted ascending or descending
-           * by their given date. **true** means the oldest entry is on top of the list, **false** vice versa.
-           *
-           * @attribute sortByDateAsc
-           * @type boolean
-           * @default false
-           */
-          sortByDateAsc: false,
-
-          /**
-           * The `dateFormat` attribute is used to set your own dateFormat which will be parsed by `Moment.js`. See
-           * http://momentjs.com/docs/#/parsing/string-format/ for all formats.
-           *
-           * @attribute dateFormat
-           * @type string
-           * @default ''
-           */
-          dateFormat: ''
+            notify: true,
+            observer: '_validateViewType',
+            reflectToAttribute: true
+          }
         },
-
         /**
          * This function sets the custom function defined by the consumer to parse the xml or json document
          * properly. This function *must* return an array in the following structure:
@@ -251,132 +302,96 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
          * @method setResponseParseFunc
          * @param func the function which parses the response
          */
-        setResponseParseFunc: function(func) {
+        setResponseParseFunc: function (func) {
           this._responseParseFunc = func;
         },
-
         //
         // *** lifecycle callbacks ***
         //
         // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#lifecyclemethods
         //
-
-        created: function() {
+        created: function () {
           // initialize private variables only here and not on the prototype itself to prevent from
           // getting a weird shared state across multiple instances of this component
-          this._responseParseFunc = null; // response parse function
-          this._sortAsc = false;          // internal flag indicating the sort order
+          this._responseParseFunc = null;
+          // response parse function
+          this._sortAsc = false;
+          // internal flag indicating the sort order
           this._entries = [];
         },
-
-        // validate attributes every time one changes its value
-        observe: {
-          feed: '_validateFeed',
-          handleAs: '_validateHandleAs',
-          viewType: '_validateViewType',
-          sortByDateAsc: '_validateSortByDateAsc'
-        },
-
         //
         // *** changed watchers ***
         //
         // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#change-watchers
         //
-
-        _sortAscChanged: function(oldVal, newVal) {
+        _sortAscChanged: function (newVal, oldVal) {
           // resorts only when the sort direction has changed
           // we cannot rerender the current shown list, so we must set the
           // entries to an empty array to take effect
           var tmp = this._entries;
           this._entries = [];
-          this.job('a bit hackish', function() {
+          this.debounce('a bit hackish', function () {
             this._entries = tmp;
           });
         },
-
-        //
-        // *** event delegates ***
-        //
-        // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#imperative-event-mapping
-        //
-        eventDelegates: {
-          'response-proceeded': function(event, detail, sender) {
-            console.info('The host element (ph-listview) sent a `response-proceeded` event to the outer world with ' +
-              'msg: "' + detail.msg + '"');
-          }
-        },
-
         //
         // *** callback handler ***
         //
         // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#declarative-event-mapping
         //
-        _requestCompleted: function(event, detail, sender) {
+        _requestCompleted: function (event, detail, sender) {
           if (detail.response != 200) {
-            console.warn('The request to the given URL returns error code "'
-              + detail.response + '". Please check the URL.');
+            console.warn('The request to the given URL returns error code "' + detail.response + '". Please check the URL.');
             return;
           }
-
           this._entries = this._responseParseFunc(_handleResponseStatic(this.handleAs, detail));
           this.fire('response-proceeded', { msg: 'The response was successfully proceeded' });
         },
-
         //
         // *** private methods ***
         //
-
-        _validateHandleAs: function(oldVal, newVal) {
+        _validateHandleAs: function (newVal, oldVal) {
           if (newVal !== 'json' && newVal !== 'rss' && newVal !== 'xml') {
-            console.warn('You must set the response type (attribute handleAs) of the given URL to proceed. ' +
-              'Please specify json, rss or xml.');
+            console.warn('You must set the response type (attribute handleAs) of the given URL to proceed. ' + 'Please specify json, rss or xml.');
             return;
           }
-
           if (newVal == 'rss') {
             // we can only handle rss by default, other formats must be provided by the parse/mapping function
             this.setResponseParseFunc(this._rssParseFunc);
           }
         },
-
-        _validateFeed: function(oldVal, newVal) {
+        _validateFeed: function (newVal, oldVal) {
           if (newVal === '') {
             console.warn('The current URL is empty, please specify one, that I can make a request ;)');
           }
         },
-
-        _validateViewType: function(oldVal, newVal) {
+        _validateViewType: function (newVal, oldVal) {
           if (newVal !== 'compact' && newVal !== 'default') {
             this.viewType = 'default';
             console.warn('You have not set a viewType. I assume you will use the default.');
           }
         },
-
-        _validateSortByDateAsc: function(oldVal, newVal) {
+        _validateSortByDateAsc: function (newVal, oldVal) {
           if (newVal === 'true' || newVal === true) {
             this.sortByDateAsc = true;
           } else {
             this.sortByDateAsc = false;
           }
-
           this._sortAsc = this.sortByDateAsc;
         },
-
         //
         // *** filter methods ***
         //
         // https://www.polymer-project.org/0.5/docs/polymer/expressions.html#custom-filters
         //
-
         // sort filter
-        _filterSortEntries: function(entries) {
+        _filterSortEntries: function (entries) {
           var list = entries.slice();
           var me = this;
-          list.sort(function(a, b) {
+          list.sort(function (a, b) {
             var asc = me._sortAsc;
             var aC = asc ? moment(a.date) : moment(b.date);
             var bC = asc ? moment(b.date) : moment(a.date);
-
             if (aC.isBefore(bC)) {
               return -1;
             } else if (aC.isAfter(bC)) {
@@ -386,13 +401,19 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           });
           return list;
         },
-
         // date format filter
-        _filterDateView: function(date) {
+        _filterDateView: function (date) {
           var date = this.dateFormat ? moment(date, this.dateFormat) : moment(date);
           return date.format('DD.MM.YYYY - H:mm');
+        },
+        hostAttributes: { 'constructor': 'PhListView' },
+        _computeIf: function (_entries, viewType) {
+          return viewType == 'default' && _entries.length > 0;
+        },
+        _computeIf2: function (_entries, viewType) {
+          return viewType == 'compact' && _entries.length > 0;
         }
-      }, Polymer.MyHelper));
-    })();
+      });
+    }());
   </script>
-</polymer-element>
+</dom-module>
