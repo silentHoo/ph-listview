@@ -5,6 +5,8 @@
 <link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="helpers.html">
 
+<script src="../moment/moment.js"></script>
+
 <!--
 This component requests data from a given feed and lists them in a listview powered by `<core-list>`. You provide a
 custom parse function which is used to parse your feed data. This can either be of type xml, json or rss.
@@ -121,32 +123,26 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
     <script type="text/javascript" src="../moment/min/moment.min.js"></script>
 
     <!-- non-visible 3rd party component -->
-    <iron-ajax auto="" url="{{ feed }}" on-core-complete=" _requestCompleted "></iron-ajax>
+    <iron-ajax auto url="{{feed}}" handle-as="text" on-response="_requestCompleted"></iron-ajax>
 
     <!-- template binding to 'default' -->
-    <template is="dom-if" if="{{_computeIf(_entries, viewType)}}" ref="template-default"></template>
-
-    <!-- template binding to 'compact' -->
-    <template is="dom-if" if="{{_computeIf(_entries, viewType)}}" ref="{{_computeIf2(_entries, viewType)}}"></template>
-
-    <!-- template definition for 'default' -->
-    <template id="template-default">
+    <template is="dom-if" if="{{_isDefault(_entries, viewType)}}">
       <!-- make sure you are 'fit' the given space! -->
-      <iron-list data="{{_filterSortEntries ( _entries)}}" fit="">
+      <iron-list items="{{_filterSortEntries(_entries)}}" as="model" fit>
         <template>
           <div class="view-default" horizontal="" layout="">
             <div class="preview" vertical="" layout="" start="" one="">
-              <iron-image src="{{ model.thumb }}" sizing="contain"></iron-image>
+              <iron-image style="width:300px;height:200px;" src="{{model.thumb}}" sizing="contain"></iron-image>
             </div>
             <div class="content" flex="">
               <div vertical="" layout="">
-                <div class="title">{{ model.title }}</div>
+                <div class="title">{{model.title}}</div>
                 <div class="subtitle">
-                  <span class="date">{{_filterDateView ( model.date)}}</span>,
-                  <span class="category">{{ model.category }}</span>
+                  <span class="date">{{_filterDateView(model.date)}}</span>,
+                  <span class="category">{{model.category}}</span>
                 </div>
-                <div class="description">{{ model.description }}</div>
-                <div class="link"><a href$="{{ model.link }}">Weiterlesen...</a></div>
+                <div class="description">{{model.description}}</div>
+                <div class="link"><a href$="{{model.link}}">Weiterlesen...</a></div>
               </div>
             </div>
           </div>
@@ -154,18 +150,18 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
       </iron-list>
     </template>
 
-    <!-- template definition for 'compact' -->
-    <template id="template-compact">
+    <!-- template binding to 'compact' -->
+    <template is="dom-if" if="{{_isCompact(_entries, viewType)}}">
       <!-- make sure you are 'fit' the given space! -->
-      <iron-list data="{{_filterSortEntries ( _entries)}}" fit="">
+      <iron-list items="{{_filterSortEntries(_entries)}}" fit>
         <template>
           <div class="view-default" horizontal="" layout="">
             <div class="content" flex="">
               <div vertical="" layout="">
-                <div class="title"><a href$="{{ model.link }}">{{ model.title }}</a></div>
+                <div class="title"><a href$="{{model.link}}">{{ model.title }}</a></div>
                 <div class="subtitle">
-                  <span class="date">{{_filterDateView ( model.date)}}</span>,
-                  <span class="category">{{ model.category }}</span>
+                  <span class="date">{{_filterDateView(model.date)}}</span>,
+                  <span class="category">{{model.category}}</span>
                 </div>
               </div>
             </div>
@@ -183,10 +179,19 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         switch (handleAs) {
         case 'xml':
         case 'rss':
-          response = detail.xhr.responseXML;
+          //we need this because there is a bug in iron-request which breaks handle-as="xml"
+          if (window.DOMParser) {
+            parser=new DOMParser();
+            response=parser.parseFromString(detail,"text/xml");
+          } else {
+            // Internet Explorer
+            response=new ActiveXObject("Microsoft.XMLDOM");
+            response.async=false;
+            response.loadXML(detail);
+          }
           break;
         case 'json':
-          response = detail.xhr.response;
+          response = JSON.parse(detail);
           break;
         }
         return response;
@@ -195,7 +200,6 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         is: 'ph-listview',
         behaviors: [Polymer.MyHelper],
         properties: {
-          _sortAsc: { observer: '_sortAscChanged' },
           /**
            * The `dateFormat` attribute is used to set your own dateFormat which will be parsed by `Moment.js`. See
            * http://momentjs.com/docs/#/parsing/string-format/ for all formats.
@@ -208,21 +212,6 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
             type: String,
             value: '',
             notify: true
-          },
-          //
-          // *** event delegates ***
-          //
-          // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#imperative-event-mapping
-          //
-          eventDelegates: {
-            type: Object,
-            value: function () {
-              return {
-                'response-proceeded': function (event, detail, sender) {
-                  console.info('The host element (ph-listview) sent a `response-proceeded` event to the outer world with ' + 'msg: "' + detail.msg + '"');
-                }
-              };
-            }
           },
           /**
            * The `feed` attribute sets the json or xml format list which is requested via XMLHTTPRequest
@@ -317,7 +306,6 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           // response parse function
           this._sortAsc = false;
           // internal flag indicating the sort order
-          this._entries = [];
         },
         //
         // *** changed watchers ***
@@ -339,12 +327,12 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         //
         // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#declarative-event-mapping
         //
-        _requestCompleted: function (event, detail, sender) {
-          if (detail.response != 200) {
-            console.warn('The request to the given URL returns error code "' + detail.response + '". Please check the URL.');
+        _requestCompleted: function (event) {
+          if (event.detail.status != 200) {
+            console.warn('The request to the given URL returns error code "' + event.detail.status + '". Please check the URL.');
             return;
           }
-          this._entries = this._responseParseFunc(_handleResponseStatic(this.handleAs, detail));
+          this._entries = this._responseParseFunc(_handleResponseStatic(this.handleAs, event.detail.response));
           this.fire('response-proceeded', { msg: 'The response was successfully proceeded' });
         },
         //
@@ -390,8 +378,9 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           var me = this;
           list.sort(function (a, b) {
             var asc = me._sortAsc;
-            var aC = asc ? moment(a.date) : moment(b.date);
-            var bC = asc ? moment(b.date) : moment(a.date);
+            //strange constructor-nesting because of https://github.com/moment/moment/issues/1407
+            var aC = asc ? moment(new Date(a.date)) : moment(new Date(b.date));
+            var bC = asc ? moment(new Date(b.date)) : moment(new Date(a.date));
             if (aC.isBefore(bC)) {
               return -1;
             } else if (aC.isAfter(bC)) {
@@ -403,14 +392,15 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         },
         // date format filter
         _filterDateView: function (date) {
-          var date = this.dateFormat ? moment(date, this.dateFormat) : moment(date);
+          //strange constructor-nesting because of https://github.com/moment/moment/issues/1407
+          var date = this.dateFormat ? moment(date, this.dateFormat) : moment(new Date(date));
           return date.format('DD.MM.YYYY - H:mm');
         },
         hostAttributes: { 'constructor': 'PhListView' },
-        _computeIf: function (_entries, viewType) {
+        _isDefault: function (_entries, viewType) {
           return viewType == 'default' && _entries.length > 0;
         },
-        _computeIf2: function (_entries, viewType) {
+        _isCompact: function (_entries, viewType) {
           return viewType == 'compact' && _entries.length > 0;
         }
       });
