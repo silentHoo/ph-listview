@@ -120,10 +120,8 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
   </style>
   <link rel="import" type="css" href="ph-listview.css">
   <template>
-    <script type="text/javascript" src="../moment/min/moment.min.js"></script>
-
     <!-- non-visible 3rd party component -->
-    <iron-ajax auto url="{{feed}}" handle-as="text" on-response="_requestCompleted"></iron-ajax>
+    <iron-ajax id="ajax" url="{{feed}}" handle-as="text" on-response="_requestCompleted"></iron-ajax>
 
     <!-- template binding to 'default' -->
     <template is="dom-if" if="{{_isDefault(_entries, viewType)}}">
@@ -153,11 +151,11 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
     <!-- template binding to 'compact' -->
     <template is="dom-if" if="{{_isCompact(_entries, viewType)}}">
       <!-- make sure you are 'fit' the given space! -->
-      <iron-list items="{{_filterSortEntries(_entries)}}" fit>
+      <iron-list items="{{_filterSortEntries(_entries)}}" as="model" fit>
         <template>
-          <div class="view-default" horizontal="" layout="">
-            <div class="content" flex="">
-              <div vertical="" layout="">
+          <div class="view-default" horizontal layout>
+            <div class="content" flex>
+              <div vertical="" layout>
                 <div class="title"><a href$="{{model.link}}">{{ model.title }}</a></div>
                 <div class="subtitle">
                   <span class="date">{{_filterDateView(model.date)}}</span>,
@@ -211,7 +209,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           dateFormat: {
             type: String,
             value: '',
-            notify: true
+            observer: '_dateFormatChanged'
           },
           /**
            * The `feed` attribute sets the json or xml format list which is requested via XMLHTTPRequest
@@ -224,8 +222,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           feed: {
             type: String,
             value: '',
-            notify: true,
-            observer: '_validateFeed'
+            observer: '_feedChanged'
           },
           /**
            * The `handleAs` attribute sets the format for the given feed. Valid inputs are **xml**, **json** and
@@ -239,7 +236,8 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
             type: String,
             value: 'xml',
             notify: true,
-            observer: '_validateHandleAs'
+            observer: '_handleAsChanged',
+            reflected: true
           },
           // will be reflected to the custom elements attribute value if the viewType's value changes
           /**
@@ -253,8 +251,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           sortByDateAsc: {
             type: Boolean,
             value: false,
-            notify: true,
-            observer: '_validateSortByDateAsc'
+            observer: '_sortingChanged'
           },
           /**
            * The `viewType` attribute sets the used view which is represented by the component. You can choose between
@@ -268,10 +265,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            */
           viewType: {
             type: String,
-            value: 'default',
-            notify: true,
-            observer: '_validateViewType',
-            reflectToAttribute: true
+            value: 'default'
           }
         },
         /**
@@ -297,7 +291,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         //
         // *** lifecycle callbacks ***
         //
-        // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#lifecyclemethods
+        // https://www.polymer-project.org/1.0/docs/devguide/registering-elements.html
         //
         created: function () {
           // initialize private variables only here and not on the prototype itself to prevent from
@@ -308,70 +302,53 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
           // internal flag indicating the sort order
         },
         //
-        // *** changed watchers ***
+        // *** private methods ***
         //
-        // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#change-watchers
-        //
-        _sortAscChanged: function (newVal, oldVal) {
-          // resorts only when the sort direction has changed
+        _triggerRerender: function () {
+          // hackish way to force a rerender of the list
           // we cannot rerender the current shown list, so we must set the
           // entries to an empty array to take effect
           var tmp = this._entries;
           this._entries = [];
-          this.debounce('a bit hackish', function () {
-            this._entries = tmp;
-          });
+          this._entries = tmp;
         },
         //
-        // *** callback handler ***
-        //
-        // https://www.polymer-project.org/0.5/docs/polymer/polymer.html#declarative-event-mapping
+        // *** callback handler **
         //
         _requestCompleted: function (event) {
           if (event.detail.status != 200) {
             console.warn('The request to the given URL returns error code "' + event.detail.status + '". Please check the URL.');
-            return;
+          } else {
+            this._entries = this._responseParseFunc(_handleResponseStatic(this.handleAs, event.detail.response));
+            this.fire('response-proceeded', { msg: 'The response was successfully proceeded' });
           }
-          this._entries = this._responseParseFunc(_handleResponseStatic(this.handleAs, event.detail.response));
-          this.fire('response-proceeded', { msg: 'The response was successfully proceeded' });
         },
-        //
-        // *** private methods ***
-        //
-        _validateHandleAs: function (newVal, oldVal) {
-          if (newVal !== 'json' && newVal !== 'rss' && newVal !== 'xml') {
-            console.warn('You must set the response type (attribute handleAs) of the given URL to proceed. ' + 'Please specify json, rss or xml.');
-            return;
-          }
+        _handleAsChanged: function (newVal, oldVal) {
           if (newVal == 'rss') {
             // we can only handle rss by default, other formats must be provided by the parse/mapping function
             this.setResponseParseFunc(this._rssParseFunc);
           }
         },
-        _validateFeed: function (newVal, oldVal) {
-          if (newVal === '') {
-            console.warn('The current URL is empty, please specify one, that I can make a request ;)');
-          }
-        },
-        _validateViewType: function (newVal, oldVal) {
-          if (newVal !== 'compact' && newVal !== 'default') {
-            this.viewType = 'default';
-            console.warn('You have not set a viewType. I assume you will use the default.');
-          }
-        },
-        _validateSortByDateAsc: function (newVal, oldVal) {
-          if (newVal === 'true' || newVal === true) {
-            this.sortByDateAsc = true;
+        _feedChanged: function (newVal, oldVal) {
+          //this is not the best method to validate a url, but doing
+          //it "right" is too complicated and out of scope
+          if (newVal) {
+            this.$.ajax.generateRequest();
           } else {
-            this.sortByDateAsc = false;
+            //empty url means to entries
+            this._entries = [];
           }
-          this._sortAsc = this.sortByDateAsc;
+        },
+        _dateFormatChanged: function(newVal, oldVal) {
+          this._triggerRerender();
+        },
+        _sortingChanged: function (newVal, oldVal) {
+          //normalize to true
+          this._sortAsc = (newVal === 'true' || newVal === true);
+          this._triggerRerender();
         },
         //
         // *** filter methods ***
-        //
-        // https://www.polymer-project.org/0.5/docs/polymer/expressions.html#custom-filters
-        //
         // sort filter
         _filterSortEntries: function (entries) {
           var list = entries.slice();
@@ -393,15 +370,15 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
         // date format filter
         _filterDateView: function (date) {
           //strange constructor-nesting because of https://github.com/moment/moment/issues/1407
-          var date = this.dateFormat ? moment(date, this.dateFormat) : moment(new Date(date));
-          return date.format('DD.MM.YYYY - H:mm');
+          var parsedDate = this.dateFormat ? moment(date, this.dateFormat) : moment(new Date(date));
+          return parsedDate.format('DD.MM.YYYY - H:mm');
         },
-        hostAttributes: { 'constructor': 'PhListView' },
+        //helper-methods to determine used template
         _isDefault: function (_entries, viewType) {
-          return viewType == 'default' && _entries.length > 0;
+          return viewType === 'default' && _entries.length > 0;
         },
         _isCompact: function (_entries, viewType) {
-          return viewType == 'compact' && _entries.length > 0;
+          return viewType === 'compact' && _entries.length > 0;
         }
       });
     }());

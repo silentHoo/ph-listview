@@ -57,36 +57,47 @@
       <legend>Configuration for <i>ph-listview</i></legend>
 
       <div id="radio-group">
-        <paper-radio-group selected="welt" paper-radio-group-changed="feedSourceSelected">
-          <paper-radio-button name="youtube">Popular YouTube Videos</paper-radio-button>
-          <paper-radio-button name="welt">Welt.de RSS-Feed</paper-radio-button>
+        <paper-radio-group selected="welt">
+          <paper-radio-button on-change="feedSourceSelected" name="github">Googles' Github Repos</paper-radio-button>
+          <paper-radio-button on-change="feedSourceSelected" name="welt">Welt.de RSS-Feed</paper-radio-button>
         </paper-radio-group>
       </div>
 
-      <template is="dom-if" if="{{listViewConfig}}">
-        <table>
-          <!--
-            We iterate over the config object which stores all properties provided by the component to have some
-            comfortable input fields to play with. The array is build in the app.js file.
-          -->
-          <template is="dom-repeat" items="{{listViewConfig}}" as="prop">
-            <tr>
-              <td>{{ prop.name }}</td>
-              <td>=</td>
-              <td><input type="text" value="{{prop.value::input}}" on-keyup="itemChanged" data-prop$="{{prop.name}}"></td>
-              <td>&nbsp;</td>
-              <td>{{ prop.validPublishValues }}</td>
-            </tr>
-          </template>
-        </table>
-      </template>
+      <table>
+        <!-- bind the config-params to the input-fields (data-binding in blur when the value is entered completely) -->
+        <tr>
+          <td>feed=</td>
+          <td><input type="text" value="{{listViewAttributes.feed::blur}}"></td>
+          <td>any URL</td>
+        </tr>
+        <tr>
+          <td>handleAs=</td>
+          <td><input type="text" value="{{listViewAttributes.handleAs::blur}}"></td>
+          <td>rss || json || xml (depends on URLs response type)</td>
+        </tr>
+        <tr>
+          <td>viewType=</td>
+          <td><input type="text" value="{{listViewAttributes.viewType::blur}}"></td>
+          <td>default || compact</td>
+        </tr>
+        <tr>
+          <td>sortByDateAsc=</td>
+          <td><input type="text" value="{{listViewAttributes.sortByDateAsc::blur}}"></td>
+          <td>'true || false'</td>
+        </tr>
+        <tr>
+          <td>dateFormat=</td>
+          <td><input type="text" value="{{listViewAttributes.dateFormat::blur}}"></td>
+          <td></td>
+        </tr>
+      </table>
     </fieldset>
 
     <!-- this is our component wrapper to properly place the component on the page -->
     <div id="listview-wrapper">
       <!-- the main component is here and is configured by data-binding which is also set in app.js -->
       <!-- camelcase is translated to hyphen -->
-      <ph-listview id="listView" view-type="{{listViewAttributes.viewType}}" feed="{{listViewAttributes.feed}}" handle-as="{{listViewAttributes.handleAs}}" sort-by-date-asc="{{listViewAttributes.sortByDateAsc}}">
+      <ph-listview id="listView" date-format="{{listViewAttributes.dateFormat}}" view-type="{{listViewAttributes.viewType}}" feed="{{listViewAttributes.feed}}" handle-as="{{listViewAttributes.handleAs}}" sort-by-date-asc="{{listViewAttributes.sortByDateAsc}}">
       </ph-listview>
     </div>
   </template>
@@ -101,52 +112,24 @@
       var firstRun = function () {
         console.log('Our app is ready to rock!');
         // add some data-binding variables to the bound template
-        app.listViewConfig = [];
         app.listViewAttributes = {};
         // initialize and show YouTube list first
         //initListViewYouTube();
         initListViewRSS();
-        initUserConfigParameters();
       };
       // Listen for WebComponentsReady event to know when bindings
       // have resolved and content has been stamped to the page
       window.addEventListener('WebComponentsReady', function () {
         firstRun();
-        app.feedSourceSelected = function (event, detail, sender) {
-          var selected = detail.item.attributes.name.value;
-          if (selected === 'youtube') {
-            initListViewYouTube();
+        app.feedSourceSelected = function (event) {
+          var selected = event.target.name;
+          if (selected === 'github') {
+            initListViewGithub();
           } else if (selected === 'welt') {
             initListViewRSS();
           }
-          initUserConfigParameters();
         };
       });
-      // event callback which is invoked when the radio button is tapped/clicked
-      app.itemChanged = function (event, detail, sender) {
-        var propName = sender.attributes['data-prop'].value;
-        // propName has changed
-        app.listViewAttributes[propName] = sender.value;
-      };
-      // configures the user input fields with the default values
-      var initUserConfigParameters = function () {
-        var publishedProps = document.querySelector('#listView').properties;
-        var validPropValues = {
-          feed: 'any URL',
-          handleAs: 'rss || json || xml (depends on URLs response type)',
-          viewType: 'default || compact',
-          sortByDateAsc: 'true || false'
-        };
-        var arr = [];
-        for (var propName in publishedProps) {
-          arr.push({
-            name: propName,
-            value: app.listViewAttributes[propName],
-            validPublishValues: validPropValues[propName]
-          });
-        }
-        app.listViewConfig = arr;
-      };
       // inits the component with an example RSS feed
       var initListViewRSS = function () {
         app.listViewAttributes = {
@@ -157,32 +140,29 @@
         };
       };
       // inits the component with an example / custom XML feed
-      var initListViewYouTube = function () {
+      var initListViewGithub = function () {
         // Configure how to handle the response and return the result array
         app.$.listView.setResponseParseFunc(function (response) {
-          var xmlNodeTree = Polymer.dom(response).querySelectorAll('entry');
-          // we only use the <entry>s
           var entries = [];
-          for (var i = 0; i < xmlNodeTree.length; i++) {
-            var node = xmlNodeTree[i];
-            var media = Polymer.dom(node).querySelector('group');
+          for (var i = 0; i < response.length; i++) {
+            var rawRepo = response[i];
             entries.push({
-              title: Polymer.dom(Polymer.dom(node).querySelector('title')).textContent,
-              date: Polymer.dom(Polymer.dom(node).querySelector('published')).textContent,
-              link: Polymer.dom(node).querySelector('link[rel="alternate"]').getAttribute('href'),
-              rating: Polymer.dom(node).querySelector('rating').getAttribute('average'),
-              viewCount: Polymer.dom(node).querySelector('statistics').getAttribute('viewCount'),
-              category: Polymer.dom(media).querySelector('category').getAttribute('label'),
-              description: Polymer.dom(Polymer.dom(media).querySelector('description')).textContent,
-              duration: Polymer.dom(media).querySelector('duration').getAttribute('seconds'),
-              thumb: Polymer.dom(media).querySelectorAll('thumbnail')[0].getAttribute('url')
+              title: rawRepo.name,
+              date: rawRepo.created_at,
+              link: rawRepo.html_url,
+              rating: rawRepo.forks,
+              viewCount: rawRepo.watchers,
+              category: rawRepo.language,
+              description: rawRepo.description,
+              duration: 0,
+              thumb: rawRepo.owner.avatar_url
             });
           }
           return entries;
         });
         app.listViewAttributes = {
-          feed: 'http://gdata.youtube.com/feeds/api/videos/',
-          handleAs: 'xml',
+          feed: 'https://api.github.com/orgs/google/repos',
+          handleAs: 'json',
           viewType: 'default',
           sortByDateAsc: false
         };
