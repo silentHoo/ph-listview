@@ -4,11 +4,12 @@
 <link rel="import" href="../iron-list/iron-list.html">
 <link rel="import" href="../iron-image/iron-image.html">
 <link rel="import" href="helpers.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 
 <script src="../moment/moment.js"></script>
 
 <!--
-This component requests data from a given feed and lists them in a listview powered by `<core-list>`. You provide a
+This component requests data from a given feed and lists them in a listview powered by `<iron-list>`. You provide a
 custom parse function which is used to parse your feed data. This can either be of type xml, json or rss.
 
 Two predefined views are available to choose from: `compact` and `default`. The compact one doesn't include any
@@ -92,48 +93,22 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 @status alpha
 @homepage http://silentHoo.github.io/ph-listview
 -->
-  <link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
 <dom-module id="ph-listview">
-  <style>
-    /* TODO(polyup): For speed, consider reworking these styles with .classes
-                     and #ids rather than [attributes].
-    */
-    [fit] {
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-    }
-    [layout] {
-      @apply(--layout);
-    }
-    [layout][horizontal] {
-      @apply(--layout-horizontal);
-    }
-    [layout][vertical] {
-      @apply(--layout-vertical);
-    }
-    [layout][start] {
-      @apply(--layout-start);
-    }
-  </style>
   <link rel="import" type="css" href="ph-listview.css">
   <template>
     <!-- non-visible 3rd party component -->
     <iron-ajax id="ajax" url="{{feed}}" handle-as="text" on-response="_requestCompleted"></iron-ajax>
 
-    <!-- template binding to 'default' -->
+    <!-- 'default'-template -->
     <template is="dom-if" if="{{_isDefault(_entries, viewType)}}">
-      <!-- make sure you are 'fit' the given space! -->
-      <iron-list items="{{_filterSortEntries(_entries)}}" as="model" fit>
+      <iron-list items="{{_filterSortEntries(_entries)}}" as="model">
         <template>
-          <div class="view-default" horizontal="" layout="">
-            <div class="preview" vertical="" layout="" start="" one="">
+          <div class="view-default">
+            <div class="preview vertical-layout" vertical="" layout="" start="" one="">
               <iron-image style="width:300px;height:200px;" src="{{model.thumb}}" sizing="contain"></iron-image>
             </div>
-            <div class="content" flex="">
-              <div vertical="" layout="">
+            <div class="content">
+              <div class="vertical-layout">
                 <div class="title">{{model.title}}</div>
                 <div class="subtitle">
                   <span class="date">{{_filterDateView(model.date)}}</span>,
@@ -148,14 +123,13 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
       </iron-list>
     </template>
 
-    <!-- template binding to 'compact' -->
+    <!-- 'compact'-template -->
     <template is="dom-if" if="{{_isCompact(_entries, viewType)}}">
-      <!-- make sure you are 'fit' the given space! -->
-      <iron-list items="{{_filterSortEntries(_entries)}}" as="model" fit>
+      <iron-list items="{{_filterSortEntries(_entries)}}" as="model">
         <template>
-          <div class="view-default" horizontal layout>
-            <div class="content" flex>
-              <div vertical="" layout>
+          <div class="view-default">
+            <div class="content">
+              <div class="vertical-layout">
                 <div class="title"><a href$="{{model.link}}">{{ model.title }}</a></div>
                 <div class="subtitle">
                   <span class="date">{{_filterDateView(model.date)}}</span>,
