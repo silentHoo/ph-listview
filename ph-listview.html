@@ -36,9 +36,9 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
     <ph-listview
       id="listView"
       feed="http://<your-url>/to/file.xml"
-      handleAs="xml"
-      viewType="compact"
-      sortByDateAsc="false"
+      handle-as="xml"
+      view-type="compact"
+      sort-by-date-asc="false"
     ></ph-listview>
 
     // NOTE: Provide a JavaScript function to parse custom xml (see below)
@@ -48,9 +48,9 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
     <ph-listview
       id="listView"
       feed="http://<your-url>/to/file.xml"
-      handleAs="xml"
-      viewType="default"
-      sortByDateAsc="true"
+      handle-as="xml"
+      view-tpe="default"
+      sort-by-date-asc="true"
     ></ph-listview>
 
     // NOTE: Provide a JavaScript function to parse custom xml (see below)
@@ -81,9 +81,9 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 
     <ph-listview
       feed="http://<your-url>/to/file.rss"
-      handleAs="rss"
-      viewType="default"
-      sortByDateAsc="false"
+      handle-as="rss"
+      view-type="default"
+      sort-by-date-asc="false"
     ></ph-listview>
 
 
@@ -202,7 +202,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * The `dateFormat` attribute is used to set your own dateFormat which will be parsed by `Moment.js`. See
            * http://momentjs.com/docs/#/parsing/string-format/ for all formats.
            *
-           * @attribute dateFormat
+           * @attribute date-format
            * @type string
            * @default ''
            */
@@ -228,13 +228,13 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * The `handleAs` attribute sets the format for the given feed. Valid inputs are **xml**, **json** and
            * **xml**.
            *
-           * @attribute handleAs
+           * @attribute handle-as
            * @type string
            * @default 'rss'
            */
           handleAs: {
             type: String,
-            value: 'xml',
+            value: 'rss',
             notify: true,
             observer: '_handleAsChanged',
             reflected: true
@@ -244,7 +244,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * The `sortByDateAsc` attribute specifies whether the entries should be sorted ascending or descending
            * by their given date. **true** means the oldest entry is on top of the list, **false** vice versa.
            *
-           * @attribute sortByDateAsc
+           * @attribute sort-by-date-asc
            * @type boolean
            * @default false
            */
@@ -259,7 +259,7 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
            * title, date, category, description and an image. A link to the full article/video/whatever is linked too.
            * **'compact'** doesn't show an image and the description.
            *
-           * @attribute viewType
+           * @attribute view-type
            * @type string
            * @default 'default'
            */

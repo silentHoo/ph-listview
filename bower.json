@@ -1,6 +1,6 @@
 {
   "name": "ph-listview",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "keywords": [
     "listview",
     "feed",
@@ -17,6 +17,7 @@
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^3.3.25",
     "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "test-fixture":  "PolymerElements/test-fixture#^1.0.0",
     "moment": "~2.10.2"
   }
 }
