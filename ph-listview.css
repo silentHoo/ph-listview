@@ -2,10 +2,16 @@
   display: block;
 }
 
+.content {
+  @apply(--flex);
+}
+
 .view-default {
   padding: 10px;
   border-bottom: 1px grey solid;
   background-color: #f5f5f5;
+  @apply(--layout);
+  @apply(--layout-horizontal);
 }
 .view-default .preview core-image {
   width: 300px;
@@ -46,4 +52,19 @@ a, a:active, a:visited {
 
 a:hover {
   color: #4a617c;
+}
+
+iron-list {
+  /* consume all space */
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.vertical-layout {
+  @apply(--layout);
+  @apply(--layout-vertical);
+  @apply(--layout-start);
 }

@@ -7,6 +7,8 @@
   <script src="../../webcomponentsjs/webcomponents.js"></script>
   <script src="../../web-component-tester/browser.js"></script>
   <script src="../../moment/min/moment.min.js"></script>
+  <link rel="import" href="../../test-fixture/test-fixture.html">
+  <script src="../../test-fixture/test-fixture-mocha.js"></script>
 
   <!-- Step 1: import the element to test -->
   <link rel="import" href="../ph-listview.html">
@@ -14,45 +16,33 @@
 </head>
 <body>
 
-<template is="auto-binding" id="template">
-  <ph-listview
-      id="listView"
-      feed="{{feed}}"
-      viewType="{{viewType}}"
-      handleAs="{{handleAs}}"
-      sortByDateAsc="{{sortByDateAsc}}"
-      dateFormat="{{dateFormat}}"
-      >
-  </ph-listview>
-</template>
+<test-fixture id="listView">
+  <template>
+    <ph-listview></ph-listview>
+  </template>
+</test-fixture>
 
 <script>
   suite('ph-listview', function () {
 
-    var t = document.querySelector('#template');
-    var l;
+    mixin = function(target, mixins) {
+      for(key in mixins) {
+        if(mixins.hasOwnProperty(key)) {
+          target[key] = mixins[key];
+        }
+      }
+    }
 
     // wait until template is bound
-    before(function (done) {
-      Polymer.mixin(t, {
+    setup(function (done) {
+      l = fixture('listView');
+      mixin(l, {
         feed: 'fixtures.rss',
-        viewType: '',
-        handleAs: 'rss',
-        sortByDateAsc: '',
-        dateFormat: ''
+        handleAs: 'rss'
       });
 
-      var defineListView = function () {
-        l = t.$.listView;
-
-        // wait until the response is proceeded
-        l.addEventListener('response-proceeded', function () {
-          done(); // now start the tests!
-        });
-      };
-
-      t.addEventListener('template-bound', function () {
-        defineListView();
+      flush(function () {
+        done(); // now start the tests!
       });
     });
 
@@ -73,12 +63,8 @@
     });
 
     test('entries should be sort by date ascending through filter', function (done) {
-      Polymer.mixin(t, {
-        feed: 'fixtures.rss',
-        viewType: '',
-        handleAs: 'rss',
-        sortByDateAsc: true,  // <-- changed
-        dateFormat: ''
+      mixin(l, {
+        sortByDateAsc: true
       });
 
       // wait for bindings to be done
@@ -91,12 +77,10 @@
     });
 
     test('feed should be processed by custom feed and function', function (done) {
-      Polymer.mixin(t, {
+      mixin(l, {
         feed: 'fixtures.xml',  // <-- changed
-        viewType: '',
         handleAs: 'xml',       // <-- changed
-        sortByDateAsc: true,   // <-- changed
-        dateFormat: ''
+        sortByDateAsc: true   // <-- changed
       });
 
       l.setResponseParseFunc(function (response) {

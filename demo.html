@@ -1,194 +1,172 @@
-<!doctype html>
-<html lang="">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ph-listview Demo</title>
-    
-    <script src="../webcomponentsjs/webcomponents.js"></script>
-    
-    <link rel="import" href="ph-listview.html">
-    <link rel="import" href="../paper-radio-group/paper-radio-group.html">
-    <link rel="import" href="../paper-radio-button/paper-radio-button.html">
-    
-    <style>
-      fieldset {
-        width: 90%;
-        margin: 0px auto;
-        border: 1px grey dashed;
-        padding: 15px;
-      }
-      fieldset table tr td:nth-child(3) {
-        width: 50%;
-      }
-      fieldset table tr td:nth-child(3) input {
-        width: 100%;
-      }
-      fieldset #radio-group {
-        text-align: center;
-      }
+<!DOCTYPE html>
+<html lang=""><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ph-listview Demo</title>
 
-      #listview-wrapper {
-        position: relative;
-        height: 60%;
-        margin-top: 20px;
-      }
-    </style>
-  </head>
-  <body unresolved fullbleed layout vertical>
+  <script src="../webcomponentsjs/webcomponents-lite.js"></script>
 
-    <template is="auto-binding" id="app">
-      <fieldset>
-        <legend>Configuration for <i>ph-listview</i></legend>
+  <link rel="import" href="ph-listview.html">
+  <link rel="import" href="../paper-radio-group/paper-radio-group.html">
+  <link rel="import" href="../paper-radio-button/paper-radio-button.html">
 
-        <div id="radio-group">
-          <paper-radio-group selected="youtube" on-core-select="{{ feedSourceSelected }}">
-            <paper-radio-button name="youtube" label="Popular YouTube Videos"></paper-radio-button>
-            <paper-radio-button name="welt" label="Welt.de RSS-Feed"></paper-radio-button>
-          </paper-radio-group>
-        </div>
+  <style>
+    fieldset {
+      width: 90%;
+      margin: 0px auto;
+      border: 1px grey dashed;
+      padding: 15px;
+    }
+    fieldset table tr td:nth-child(3) {
+      width: 50%;
+    }
+    fieldset table tr td:nth-child(3) input {
+      width: 100%;
+    }
+    fieldset #radio-group {
+      text-align: center;
+    }
 
-        <template if="{{ listViewConfig }}">
-          <table>
-            <!--
-              We iterate over the config object which stores all properties provided by the component to have some
-              comfortable input fields to play with. The array is build in the app.js file.
-            -->
-            <template repeat="{{ prop in listViewConfig }}">
-              <tr>
-                <td>{{ prop.name }}</td>
-                <td>=</td>
-                <td><input type="text" data-prop="{{ prop.name }}" value="{{ prop.value }}" on-keyup="{{ itemChanged }}"></td>
-                <td>&nbsp;</td>
-                <td>{{ prop.validPublishValues }}</td>
-              </tr>
-            </template>
-          </table>
-        </template>
-      </fieldset>
+    #listview-wrapper {
+      position: relative;
+      height: 60%;
+      margin-top: 20px;
+    }
+  </style>
+  <style is="custom-style">
+  /* TODO(polyup): For speed, consider reworking these styles with .classes
+                   and #ids rather than [attributes].
+  */
+  [layout] {
+    @apply(--layout);
+  }
+  [layout][vertical] {
+    @apply(--layout-vertical);
+  }
+  [fullbleed] {
+    margin: 0;
+    height:100vh;
+  }
+</style>
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+</head>
+<body unresolved="" fullbleed="" layout="" vertical="">
 
-      <!-- this is our component wrapper to properly place the component on the page -->
-      <div id="listview-wrapper">
-        <!-- the main component is here and is configured by data-binding which is also set in app.js-->
-        <ph-listview
-            id="listView"
-            viewType="{{ listViewAttributes.viewType }}"
-            feed="{{ listViewAttributes.feed }}"
-            handleAs="{{ listViewAttributes.handleAs }}"
-            sortByDateAsc="{{ listViewAttributes.sortByDateAsc }}">
-        </ph-listview>
+  <template is="dom-bind" id="app">
+    <fieldset>
+      <legend>Configuration for <i>ph-listview</i></legend>
+
+      <div id="radio-group">
+        <paper-radio-group selected="welt">
+          <paper-radio-button on-change="feedSourceSelected" name="github">Googles' Github Repos</paper-radio-button>
+          <paper-radio-button on-change="feedSourceSelected" name="welt">Welt.de RSS-Feed</paper-radio-button>
+        </paper-radio-group>
       </div>
-    </template>
 
-    <script>
-      (function (document) {
-        'use strict';
+      <table>
+        <!-- bind the config-params to the input-fields (data-binding in blur when the value is entered completely) -->
+        <tr>
+          <td>feed=</td>
+          <td><input type="text" value="{{listViewAttributes.feed::blur}}"></td>
+          <td>any URL</td>
+        </tr>
+        <tr>
+          <td>handleAs=</td>
+          <td><input type="text" value="{{listViewAttributes.handleAs::blur}}"></td>
+          <td>rss || json || xml (depends on URLs response type)</td>
+        </tr>
+        <tr>
+          <td>viewType=</td>
+          <td><input type="text" value="{{listViewAttributes.viewType::blur}}"></td>
+          <td>default || compact</td>
+        </tr>
+        <tr>
+          <td>sortByDateAsc=</td>
+          <td><input type="text" value="{{listViewAttributes.sortByDateAsc::blur}}"></td>
+          <td>'true || false'</td>
+        </tr>
+        <tr>
+          <td>dateFormat=</td>
+          <td><input type="text" value="{{listViewAttributes.dateFormat::blur}}"></td>
+          <td></td>
+        </tr>
+      </table>
+    </fieldset>
 
-        // Grab a reference to our auto-binding template
-        // and give it some initial binding values
-        // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
-        var app = document.querySelector('#app');
+    <!-- this is our component wrapper to properly place the component on the page -->
+    <div id="listview-wrapper">
+      <!-- the main component is here and is configured by data-binding which is also set in app.js -->
+      <!-- camelcase is translated to hyphen -->
+      <ph-listview id="listView" date-format="{{listViewAttributes.dateFormat}}" view-type="{{listViewAttributes.viewType}}" feed="{{listViewAttributes.feed}}" handle-as="{{listViewAttributes.handleAs}}" sort-by-date-asc="{{listViewAttributes.sortByDateAsc}}">
+      </ph-listview>
+    </div>
+  </template>
 
-        var firstRun = function() {
-          console.log('Our app is ready to rock!');
-
-          // add some data-binding variables to the bound template
-          app.listViewConfig = [];
-          app.listViewAttributes = {};
-
-          // initialize and show YouTube list first
-          initListViewYouTube();
-          initUserConfigParameters();
-        };
-
-        // Listen for template bound event to know when bindings
-        // have resolved and content has been stamped to the page
-        app.addEventListener('template-bound', function() {
-          firstRun();
-
-          app.feedSourceSelected = function(event, detail, sender) {
-            var selected = detail.item.attributes.name.value;
-
-            if (selected === 'youtube') {
-              initListViewYouTube();
-            } else if (selected === 'welt') {
-              initListViewRSS();
-            }
-            initUserConfigParameters();
-          };
-        });
-
-        // event callback which is invoked when the radio button is tapped/clicked
-        app.itemChanged = function(event, detail, sender) {
-          var propName = sender.attributes['data-prop'].value;  // propName has changed
-          app.listViewAttributes[propName] = sender.value;
-        };
-
-        // configures the user input fields with the default values
-        var initUserConfigParameters = function() {
-          var publishedProps = PhListView.prototype.publish;
-          var validPropValues = {
-            feed: 'any URL',
-            handleAs: 'rss || json || xml (depends on URLs response type)',
-            viewType: 'default || compact',
-            sortByDateAsc: 'true || false'
-          };
-
-          var arr = [];
-          for (var propName in publishedProps) {
-            arr.push({ name: propName, value: app.listViewAttributes[propName], validPublishValues: validPropValues[propName] });
+  <script>
+    (function (document) {
+      'use strict';
+      // Grab a reference to our auto-binding template
+      // and give it some initial binding values
+      // Learn more about auto-binding templates at http://goo.gl/Dx1u2g
+      var app = document.querySelector('#app');
+      var firstRun = function () {
+        console.log('Our app is ready to rock!');
+        // add some data-binding variables to the bound template
+        app.listViewAttributes = {};
+        // initialize and show YouTube list first
+        //initListViewYouTube();
+        initListViewRSS();
+      };
+      // Listen for WebComponentsReady event to know when bindings
+      // have resolved and content has been stamped to the page
+      window.addEventListener('WebComponentsReady', function () {
+        firstRun();
+        app.feedSourceSelected = function (event) {
+          var selected = event.target.name;
+          if (selected === 'github') {
+            initListViewGithub();
+          } else if (selected === 'welt') {
+            initListViewRSS();
           }
-          app.listViewConfig = arr;
         };
-
-        // inits the component with an example RSS feed
-        var initListViewRSS = function() {
-          app.listViewAttributes = {
-            feed: 'http://www.welt.de/wirtschaft/webwelt/?service=Rss',
-            handleAs: 'rss',
-            viewType: 'default',
-            sortByDateAsc: 'true'
-          };
+      });
+      // inits the component with an example RSS feed
+      var initListViewRSS = function () {
+        app.listViewAttributes = {
+          feed: 'http://www.welt.de/wirtschaft/webwelt/?service=Rss',
+          handleAs: 'rss',
+          viewType: 'default',
+          sortByDateAsc: 'true'
         };
-
-        // inits the component with an example / custom XML feed
-        var initListViewYouTube = function() {
-          // Configure how to handle the response and return the result array
-          app.$.listView.setResponseParseFunc(function (response) {
-            var xmlNodeTree = response.querySelectorAll('entry'); // we only use the <entry>s
-
-            var entries = [];
-            for (var i = 0; i < xmlNodeTree.length; i++) {
-              var node = xmlNodeTree[i];
-              var media = node.querySelector('group');
-
-              entries.push({
-                title: node.querySelector('title').textContent,
-                date: node.querySelector('published').textContent,
-                link: node.querySelector('link[rel="alternate"]').getAttribute('href'),
-                rating: node.querySelector('rating').getAttribute('average'),
-                viewCount: node.querySelector('statistics').getAttribute('viewCount'),
-                category: media.querySelector('category').getAttribute('label'),
-                description: media.querySelector('description').textContent,
-                duration: media.querySelector('duration').getAttribute('seconds'),
-                thumb: media.querySelectorAll('thumbnail')[0].getAttribute('url')
-              });
-            }
-
-            return entries;
-          });
-
-          app.listViewAttributes = {
-            feed: 'http://gdata.youtube.com/feeds/api/videos/',
-            handleAs: 'xml',
-            viewType: 'default',
-            sortByDateAsc: false
-          };
+      };
+      // inits the component with an example / custom XML feed
+      var initListViewGithub = function () {
+        // Configure how to handle the response and return the result array
+        app.$.listView.setResponseParseFunc(function (response) {
+          var entries = [];
+          for (var i = 0; i < response.length; i++) {
+            var rawRepo = response[i];
+            entries.push({
+              title: rawRepo.name,
+              date: rawRepo.created_at,
+              link: rawRepo.html_url,
+              rating: rawRepo.forks,
+              viewCount: rawRepo.watchers,
+              category: rawRepo.language,
+              description: rawRepo.description,
+              duration: 0,
+              thumb: rawRepo.owner.avatar_url
+            });
+          }
+          return entries;
+        });
+        app.listViewAttributes = {
+          feed: 'https://api.github.com/orgs/google/repos',
+          handleAs: 'json',
+          viewType: 'default',
+          sortByDateAsc: false
         };
-
-        // wrap document so it plays nice with other libraries
-        // http://www.polymer-project.org/platform/shadow-dom.html#wrappers
-      })(wrap(document));
-    </script>
-  </body>
-</html>
+      };
+    }(document));
+  </script>
+</body>
