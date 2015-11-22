@@ -1,0 +1,33 @@
+<!--
+* @group Polymer Mixins
+-->
+
+<script>
+  (function (scope) {
+
+    scope.MyHelper = {
+      // parses a given xml document as RSS 2.0 feed and returns all entries as an array containing the most
+      // useful attributes
+      _rssParseFunc: function (xmlDocument) {
+        var xmlNodeTree = xmlDocument.querySelectorAll('item');
+
+        var entries = [];
+        for (var i = 0; i < xmlNodeTree.length; i++) {
+          var node = xmlNodeTree[i];
+
+          entries.push({
+            title: node.querySelector('title').textContent,
+            date: node.querySelector('pubDate').textContent,
+            link: node.querySelector('link').textContent,
+            category: node.querySelector('category').textContent,
+            description: node.querySelector('description').textContent,
+            thumb: node.querySelector('enclosure').getAttribute('url')
+          });
+        }
+        return entries;
+      }
+    };
+
+  })(Polymer);
+
+</script>

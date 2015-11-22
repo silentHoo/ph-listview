@@ -1,0 +1,23 @@
+{
+  "name": "ph-listview",
+  "version": "0.2.0",
+  "keywords": [
+    "listview",
+    "feed",
+    "reader",
+    "polymer",
+    "web-components"
+  ],
+  "main": "ph-listview.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.1.0",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "moment": "~2.10.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^3.3.25",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "test-fixture":  "PolymerElements/test-fixture#^1.0.0",
+    "moment": "~2.10.2"
+  }
+}

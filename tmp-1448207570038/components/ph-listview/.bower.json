@@ -1,0 +1,33 @@
+{
+  "name": "ph-listview",
+  "keywords": [
+    "listview",
+    "feed",
+    "reader",
+    "polymer",
+    "web-components"
+  ],
+  "main": "ph-listview.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^1.1.0",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "moment": "~2.10.2"
+  },
+  "devDependencies": {
+    "web-component-tester": "Polymer/web-component-tester#^3.3.25",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "test-fixture": "PolymerElements/test-fixture#^1.0.0",
+    "moment": "~2.10.2"
+  },
+  "homepage": "https://github.com/silentHoo/ph-listview",
+  "_release": "93a377d651",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "93a377d6511fd00e7680eefecf1e12b8a7f647a4"
+  },
+  "_source": "git://github.com/silentHoo/ph-listview.git",
+  "_target": "master",
+  "_originalSource": "silentHoo/ph-listview",
+  "_direct": true
+}

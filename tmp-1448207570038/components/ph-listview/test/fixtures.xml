@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed>
+    <updated>2015-04-10T14:32:51.670Z</updated>
+    <title type='text'>Videos</title>
+    <entry>
+        <published>2014-10-07T13:57:37.000Z</published>
+        <title type='text'>My Title #1</title>
+        <link rel='alternate' type='text/html' href='http://example.com/'/>
+        <group>
+            <category label='label1'></category>
+            <description>This  is a very long description 1...</description>
+            <thumbnail url='http://lorempixel.com/400/200/'/>
+        </group>
+        <rating average='2'/>
+    </entry>
+    <entry>
+        <published>2015-02-26T18:30:01.000Z</published>
+        <title type='text'>My Title #2</title>
+        <link rel='alternate' type='text/html' href='http://example.com/'/>
+        <group>
+            <category label='label2'></category>
+            <description>This  is a very long description 2...</description>
+            <thumbnail url='http://lorempixel.com/400/200/'/>
+        </group>
+        <rating average='4'/>
+    </entry>
+    <entry>
+        <published>2016-09-25T15:22:12.000Z</published>
+        <title type='text'>My Title #3</title>
+        <link rel='alternate' type='text/html' href='http://example.com/'/>
+        <group>
+            <category label='label3'></category>
+            <description>This  is a very long description 3...</description>
+            <thumbnail url='http://lorempixel.com/400/200/'/>
+        </group>
+        <rating average='5'/>
+    </entry>
+</feed>

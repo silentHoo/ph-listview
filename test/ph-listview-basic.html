@@ -1,0 +1,129 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <title>ph-listview-basic</title>
+
+  <script src="../../webcomponentsjs/webcomponents.js"></script>
+  <script src="../../web-component-tester/browser.js"></script>
+  <script src="../../moment/min/moment.min.js"></script>
+  <link rel="import" href="../../test-fixture/test-fixture.html">
+  <script src="../../test-fixture/test-fixture-mocha.js"></script>
+
+  <!-- Step 1: import the element to test -->
+  <link rel="import" href="../ph-listview.html">
+
+</head>
+<body>
+
+<test-fixture id="listView">
+  <template>
+    <ph-listview></ph-listview>
+  </template>
+</test-fixture>
+
+<script>
+  suite('ph-listview', function () {
+
+    mixin = function(target, mixins) {
+      for(key in mixins) {
+        if(mixins.hasOwnProperty(key)) {
+          target[key] = mixins[key];
+        }
+      }
+    }
+
+    // wait until template is bound
+    setup(function (done) {
+      l = fixture('listView');
+      mixin(l, {
+        feed: 'fixtures.rss',
+        handleAs: 'rss'
+      });
+
+      flush(function () {
+        done(); // now start the tests!
+      });
+    });
+
+    test('viewType should be `default`', function () {
+      assert.equal(l.viewType, 'default');
+    });
+
+    test('feed should be processed as RSS', function () {
+      assert.equal(l._entries[0].title, 'title #1');
+      assert.equal(l._entries[1].title, 'title #2');
+      assert.equal(l._entries[2].title, 'title #3');
+    });
+
+    test('entries should be sort by date descending through filter', function () {
+      var sorted = l._filterSortEntries(l._entries);
+      assert.isTrue(moment(sorted[0].date).isAfter(moment(sorted[1].date)));
+      assert.isTrue(moment(sorted[1].date).isAfter(moment(sorted[2].date)));
+    });
+
+    test('entries should be sort by date ascending through filter', function (done) {
+      mixin(l, {
+        sortByDateAsc: true
+      });
+
+      // wait for bindings to be done
+      flush(function () {
+        var sorted = l._filterSortEntries(l._entries);
+        assert.isTrue(moment(sorted[0].date).isBefore(moment(sorted[1].date)));
+        assert.isTrue(moment(sorted[1].date).isBefore(moment(sorted[2].date)));
+        done();
+      });
+    });
+
+    test('feed should be processed by custom feed and function', function (done) {
+      mixin(l, {
+        feed: 'fixtures.xml',  // <-- changed
+        handleAs: 'xml',       // <-- changed
+        sortByDateAsc: true   // <-- changed
+      });
+
+      l.setResponseParseFunc(function (response) {
+        var xmlNodeTree = response.querySelectorAll('entry'); // we only use the <entry>s
+
+        var entries = [];
+        for (var i = 0; i < xmlNodeTree.length; i++) {
+          var node = xmlNodeTree[i];
+          var media = node.querySelector('group');
+
+          entries.push({
+            title: node.querySelector('title').textContent,
+            date: node.querySelector('published').textContent,
+            link: node.querySelector('link[rel="alternate"]').getAttribute('href'),
+            category: media.querySelector('category').getAttribute('label'),
+            description: media.querySelector('description').textContent,
+            thumb: media.querySelectorAll('thumbnail')[0].getAttribute('url')
+          });
+        }
+
+        return entries;
+      });
+
+      // wait for bindings to be done
+      flush(function () {
+        l.addEventListener('response-proceeded', function () {
+          // now start the test, but first sort manually, because we have no event to check
+          var sorted = l._filterSortEntries(l._entries);
+
+          assert.equal(sorted[0].title, 'My Title #1');
+          assert.equal(sorted[0].date, '2014-10-07T13:57:37.000Z');
+          assert.equal(sorted[0].link, 'http://example.com/');
+          assert.equal(sorted[0].category, 'label1');
+          assert.equal(sorted[0].description, 'This  is a very long description 1...');
+          assert.equal(sorted[0].thumb, 'http://lorempixel.com/400/200/');
+          assert.equal(sorted.length, 3);
+          done();
+        });
+
+      });
+    });
+  });
+</script>
+
+</body>
+</html>
