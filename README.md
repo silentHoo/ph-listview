@@ -27,8 +27,8 @@ Please note: The date must be parseable by the `Moment.js` library. If you use a
 
     <ph-listview
       id="listView"
-      feed="http://gdata.youtube.com/feeds/api/videos/"
-      handleAs="xml"
+      feed="https://api.github.com/orgs/google/repos"
+      handleAs="json"
       viewType="compact"
       sortByDateAsc="false"
     ></ph-listview>
@@ -39,8 +39,8 @@ NOTE: Provide a JavaScript function to parse custom xml (see below)
 
     <ph-listview
       id="listView"
-      feed="http://gdata.youtube.com/feeds/api/videos/"
-      handleAs="xml"
+      feed="https://api.github.com/orgs/google/repos"
+      handleAs="json"
       viewType="default"
       sortByDateAsc="true"
     ></ph-listview>
